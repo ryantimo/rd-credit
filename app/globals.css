@@ -3,25 +3,83 @@
 @tailwind utilities;
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --bg:      #07080f;
+  --surface: #0e0f1c;
+  --border:  rgba(255,255,255,0.07);
+  --muted:   #4b4b6b;
+  --text:    #e2e2f0;
+  --accent:  #6366f1;
+  --green:   #10b981;
+  --red:     #ef4444;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
+* { box-sizing: border-box; }
 
 body {
-  color: var(--foreground);
-  background: var(--background);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  font-family: "Inter", system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
 }
 
-@layer utilities {
-  .text-balance {
-    text-wrap: balance;
+@layer components {
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+  }
+
+  .btn-primary {
+    @apply inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium transition-all;
+    background: var(--accent);
+    color: white;
+  }
+  .btn-primary:hover { opacity: 0.9; }
+  .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
+
+  .btn-ghost {
+    @apply inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium transition-all;
+    color: var(--muted);
+    border: 1px solid var(--border);
+  }
+  .btn-ghost:hover { color: var(--text); border-color: rgba(255,255,255,0.15); }
+
+  .input {
+    @apply w-full px-3 py-2.5 rounded-lg text-sm outline-none transition-all;
+    background: rgba(255,255,255,0.04);
+    border: 1px solid var(--border);
+    color: var(--text);
+  }
+  .input::placeholder { color: var(--muted); }
+  .input:focus { border-color: var(--accent); }
+
+  .label {
+    @apply block text-xs font-medium mb-1.5;
+    color: var(--muted);
+  }
+
+  .data-table {
+    @apply w-full text-sm;
+    border-collapse: collapse;
+  }
+  .data-table th {
+    @apply text-left px-4 py-3 text-xs font-semibold uppercase tracking-wide;
+    color: var(--muted);
+    border-bottom: 1px solid var(--border);
+  }
+  .data-table td {
+    @apply px-4 py-3;
+    border-bottom: 1px solid var(--border);
+    color: var(--text);
+  }
+  .data-table tr:last-child td { border-bottom: none; }
+  .data-table tbody tr:hover { background: rgba(255,255,255,0.02); }
+
+  .badge {
+    @apply inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium;
+  }
+
+  .step-pill {
+    @apply inline-flex items-center justify-center w-7 h-7 rounded-full text-xs font-bold;
   }
 }

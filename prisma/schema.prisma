@@ -1,0 +1,85 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  name      String
+  firm      String?
+  password  String
+  createdAt DateTime @default(now())
+  clients   Client[]
+}
+
+model Client {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  name      String
+  ein       String?
+  industry  String?
+  createdAt DateTime @default(now())
+  filings   Filing[]
+}
+
+model Filing {
+  id        String   @id @default(cuid())
+  clientId  String
+  client    Client   @relation(fields: [clientId], references: [id])
+  taxYear   Int
+  status    String   @default("draft")
+  method    String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  qualAnswers String?
+
+  employees  Employee[]
+  supplies   Supply[]
+  contracts  Contract[]
+
+  totalWages     Float?
+  totalSupplies  Float?
+  totalContracts Float?
+  totalQRE       Float?
+  creditAmount   Float?
+
+  ascPriorQRE1 Float?
+  ascPriorQRE2 Float?
+  ascPriorQRE3 Float?
+}
+
+model Employee {
+  id         String  @id @default(cuid())
+  filingId   String
+  filing     Filing  @relation(fields: [filingId], references: [id])
+  name       String
+  title      String?
+  w2Wages    Float
+  rdTimePct  Float
+  qualWages  Float
+}
+
+model Supply {
+  id          String @id @default(cuid())
+  filingId    String
+  filing      Filing @relation(fields: [filingId], references: [id])
+  description String
+  amount      Float
+}
+
+model Contract {
+  id          String @id @default(cuid())
+  filingId    String
+  filing      Filing @relation(fields: [filingId], references: [id])
+  vendor      String
+  description String
+  amount      Float
+  qualified   Float
+}
