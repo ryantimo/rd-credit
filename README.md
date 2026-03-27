@@ -1,36 +1,128 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# CreditIQ — R&D Tax Credit Platform
 
-## Getting Started
+A professional, guided platform for CPAs to prepare R&D tax credit studies under IRC § 41. Step-by-step interview flow → automatic RRC/ASC calculation → Form 6765 output.
 
-First, run the development server:
+**Live:** [rd-credit-production.up.railway.app](https://rd-credit-production.up.railway.app)
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+---
+
+## What it does
+
+CPAs log in, add clients, and run through a 6-step wizard for each tax year filing:
+
+1. **Qualification** — 6 yes/no questions encode the 4-part test (permitted purpose, technological in nature, elimination of uncertainty, process of experimentation) plus funded research and internal-use software exclusions. Blocks progress if the activity doesn't qualify.
+2. **Employees** — W-2 wages + R&D time % per person. Qualified wages calculated automatically.
+3. **Supplies** — Materials and consumables used in qualified research (IRC § 41(b)(2)(C)).
+4. **Contract Research** — Third-party vendor payments. 65% rule (IRC § 41(b)(3)) applied automatically.
+5. **Calculate** — Gross receipts + prior 3yr QREs entered. App runs both RRC (20%) and ASC (14%) and picks the better method.
+6. **Report** — Form 6765 line-by-line summary with full QRE breakdown tables, print-ready.
+
+---
+
+## Tech Stack
+
+- **Framework:** Next.js 14 (App Router)
+- **Language:** TypeScript
+- **Database:** PostgreSQL via Prisma 5
+- **Auth:** NextAuth.js (credentials provider)
+- **Styling:** Tailwind CSS — dark theme
+- **Deployment:** Railway
+
+---
+
+## Project Structure
+
+```
+rd-credit/
+├── app/
+│   ├── api/
+│   │   ├── auth/[...nextauth]/   # NextAuth handler
+│   │   ├── register/             # CPA signup
+│   │   ├── clients/              # Client CRUD
+│   │   └── filings/              # Filing CRUD + credit calculation
+│   ├── login/
+│   ├── signup/
+│   ├── dashboard/
+│   └── clients/[id]/filings/[filingId]/
+│       ├── page.tsx              # 6-step wizard
+│       └── report/page.tsx       # Form 6765 output
+├── components/
+│   ├── AppShell.tsx              # Sidebar + layout
+│   └── Providers.tsx             # SessionProvider
+├── lib/
+│   ├── auth.ts                   # NextAuth config
+│   ├── calc.ts                   # RRC + ASC calculator (IRC § 41)
+│   └── prisma.ts                 # Prisma client singleton
+└── prisma/
+    └── schema.prisma             # User, Client, Filing, Employee, Supply, Contract
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+---
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Getting Started Locally
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+### 1. Clone & install
+```bash
+git clone https://github.com/ryantimo/rd-credit.git
+cd rd-credit
+npm install
+```
 
-## Learn More
+### 2. Set up environment
+```bash
+cp .env.example .env
+# Fill in DATABASE_URL, NEXTAUTH_SECRET, NEXTAUTH_URL
+```
 
-To learn more about Next.js, take a look at the following resources:
+### 3. Push schema to database
+```bash
+npx prisma db push
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+### 4. Start dev server
+```bash
+npm run dev
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+Open [http://localhost:3000](http://localhost:3000).
 
-## Deploy on Vercel
+---
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## Deploy to Railway
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+1. Create a new Railway project
+2. Add a PostgreSQL database service
+3. Deploy this repo as a service
+4. Set environment variables:
+   - `DATABASE_URL` — reference the Postgres service variable
+   - `NEXTAUTH_SECRET` — any random 32+ char string
+   - `NEXTAUTH_URL` — your Railway app URL
+   - `NIXPACKS_BUILD_CMD` — `npx prisma generate && npm run build`
+5. Set start command: `npx prisma db push --accept-data-loss && npm start`
+
+---
+
+## Tax Credit Logic
+
+All calculation logic lives in `lib/calc.ts`:
+
+**Regular Research Credit (RRC)** — IRC § 41(a)(1)
+- Credit = 20% × (Current QRE − Base Amount)
+- Base Amount = Fixed-base % × avg gross receipts, minimum 50% of current QRE
+
+**Alternative Simplified Credit (ASC)** — IRC § 41(c)(5)
+- Credit = 14% × (Current QRE − 50% of avg prior 3yr QRE)
+- If no prior QRE history: 6% × current QRE
+
+The app calculates both methods and selects whichever produces the higher credit.
+
+**QRE components:**
+- Wages: W-2 wages × R&D time allocation % — IRC § 41(b)(2)(A)
+- Supplies: consumables used in research — IRC § 41(b)(2)(C)
+- Contract research: 65% of payments to third-party researchers — IRC § 41(b)(3)
+
+---
+
+## License
+
+MIT
