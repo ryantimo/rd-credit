@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import bcrypt from "bcryptjs"
 import { prisma } from "@/lib/prisma"
+import { notifyNewUser } from "@/lib/email"
 
 export async function POST(req: NextRequest) {
   const { name, email, password, firm } = await req.json()
@@ -11,6 +12,8 @@ export async function POST(req: NextRequest) {
 
   const hashed = await bcrypt.hash(password, 12)
   const user = await prisma.user.create({ data: { name, email, password: hashed, firm } })
+
+  notifyNewUser(name, email, firm).catch(() => {})
 
   return NextResponse.json({ id: user.id, email: user.email })
 }

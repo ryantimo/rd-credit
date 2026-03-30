@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth"
 import { authOptions } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
 import { buildQRESummary, calcBestCredit } from "@/lib/calc"
+import { notifyFilingComplete } from "@/lib/email"
 
 export async function GET(_: NextRequest, { params }: { params: { id: string } }) {
   const session = await getServerSession(authOptions)
@@ -85,6 +86,17 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
     },
     include: { employees: true, supplies: true, contracts: true, client: true },
   })
+
+  if (status === "complete" && filing.creditAmount && filing.method) {
+    notifyFilingComplete(
+      session.user.name ?? "Unknown",
+      session.user.email ?? "",
+      filing.client.name,
+      filing.taxYear,
+      filing.creditAmount,
+      filing.method,
+    ).catch(() => {})
+  }
 
   return NextResponse.json(filing)
 }

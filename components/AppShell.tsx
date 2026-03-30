@@ -2,7 +2,7 @@
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { signOut, useSession } from "next-auth/react"
-import { LayoutDashboard, Users, LogOut, Zap } from "lucide-react"
+import { LayoutDashboard, Users, LogOut, Zap, ShieldCheck } from "lucide-react"
 import clsx from "clsx"
 
 const nav = [
@@ -44,6 +44,12 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
         <div className="border-t pt-4 px-3" style={{ borderColor: "rgba(255,255,255,0.06)" }}>
           <div className="text-xs font-medium text-white mb-0.5">{session?.user?.name}</div>
           <div className="text-xs mb-3" style={{ color: "#4b4b6b" }}>{session?.user?.email}</div>
+          {session?.user?.email === "timonian.98@gmail.com" && (
+            <Link href="/admin" className="flex items-center gap-2 text-xs mb-2 transition-colors"
+              style={{ color: "#f87171" }}>
+              <ShieldCheck size={13} /> Admin
+            </Link>
+          )}
           <button onClick={() => signOut({ callbackUrl: "/" })}
             className="flex items-center gap-2 text-xs transition-colors w-full"
             style={{ color: "#4b4b6b" }}>
